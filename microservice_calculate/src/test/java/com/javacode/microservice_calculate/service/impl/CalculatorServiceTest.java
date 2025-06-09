@@ -51,7 +51,6 @@ class CalculatorServiceTest {
         }
     }
 
-
     @Test
     void calculateOffers_shouldGenerateFourOffers() {
         LoanStatementRequestDto request = new LoanStatementRequestDto();
@@ -221,5 +220,26 @@ class CalculatorServiceTest {
         });
 
         assertEquals("Сумма кредита превышает 24 зарплаты", exception.getCause().getMessage());
+    }
+
+    @Test
+    public void calculatePSK_ShouldReturnCorrectValue() throws Exception {
+        BigDecimal amount = new BigDecimal("100000");
+        BigDecimal monthlyPayment = new BigDecimal("8791.59");
+        int term = 12;
+
+        Method method = CalculatorServiceImpl.class.getDeclaredMethod(
+                "calculatePSK",
+                BigDecimal.class, BigDecimal.class, int.class
+        );
+        method.setAccessible(true);
+
+        BigDecimal psk = (BigDecimal) method.invoke(
+                calculatorService,
+                amount, monthlyPayment, term
+        );
+
+        BigDecimal expected = monthlyPayment.multiply(new BigDecimal(term)).subtract(amount);
+        assertEquals(expected, psk);
     }
 }
