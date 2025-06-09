@@ -170,4 +170,56 @@ class CalculatorServiceTest {
         assertNotNull(result);
         assertTrue(result.compareTo(BigDecimal.ZERO) > 0);
     }
+
+    @Test
+    public void validateAge_AgeUnder20_ThrowsException() throws Exception {
+        Method method = CalculatorServiceImpl.class.getDeclaredMethod("validateAge", LocalDate.class);
+        method.setAccessible(true);
+
+        Exception exception = assertThrows(InvocationTargetException.class, () -> {
+            method.invoke(calculatorService, LocalDate.now().minusYears(19));
+        });
+
+        assertEquals("Возраст клиента должен быть от 20 до 65 лет", exception.getCause().getMessage());
+    }
+
+    @Test
+    public void validateAge_AgeOver65_ThrowsException() throws Exception {
+        Method method = CalculatorServiceImpl.class.getDeclaredMethod("validateAge", LocalDate.class);
+        method.setAccessible(true);
+
+        Exception exception = assertThrows(InvocationTargetException.class, () -> {
+            method.invoke(calculatorService, LocalDate.now().minusYears(66));
+        });
+
+        assertEquals("Возраст клиента должен быть от 20 до 65 лет", exception.getCause().getMessage());
+    }
+
+    @Test
+    public void validateName_InvalidCharacters_ThrowsException() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            LoanStatementRequestDto request = new LoanStatementRequestDto();
+            request.setFirstName("Иван");
+            calculatorService.calculateOffers(request);
+        });
+    }
+
+    @Test
+    public void validateLoanAmountLimits_ExceedsMaxLoanAmount_ThrowsException() throws Exception {
+        EmploymentDto employment = new EmploymentDto();
+        employment.setSalary(new BigDecimal("1000"));
+
+        ScoringDataDto scoringData = new ScoringDataDto();
+        scoringData.setEmployment(employment);
+        scoringData.setAmount(new BigDecimal("25000"));
+
+        Method method = CalculatorServiceImpl.class.getDeclaredMethod("validateLoanAmountLimits", BigDecimal.class, BigDecimal.class);
+        method.setAccessible(true);
+
+        Exception exception = assertThrows(InvocationTargetException.class, () -> {
+            method.invoke(calculatorService, scoringData.getAmount(), employment.getSalary());
+        });
+
+        assertEquals("Сумма кредита превышает 24 зарплаты", exception.getCause().getMessage());
+    }
 }
