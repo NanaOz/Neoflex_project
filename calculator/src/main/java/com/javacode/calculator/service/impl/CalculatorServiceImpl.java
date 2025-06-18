@@ -154,7 +154,7 @@ public class CalculatorServiceImpl implements CalculatorService {
         // Корректировка ставки на основе данных скоринга
         switch (scoringData.getEmployment().getEmploymentStatus()) {
             case UNEMPLOYED:
-                throw new ScoringDataException("Безработные клиенты не могут получить кредит");
+                throw new EmploymentValidationException("Безработные клиенты не могут получить кредит");
             case SELF_EMPLOYED:
                 rate = rate.add(selfEmployedRate);
                 break;
