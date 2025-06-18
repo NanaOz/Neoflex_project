@@ -60,6 +60,8 @@ public class CalculatorServiceImpl implements CalculatorService {
     private int monthsInYear;
     @Value("${calculation.percent-divisor}")
     private int percentDivisor;
+    @Value("${calculation.monthly-rate-divisor}")
+    private int monthlyRateDivisor;
 
     @Override
     public List<LoanOfferDto> calculateOffers(LoanStatementRequestDto requestDto) {
@@ -233,7 +235,7 @@ public class CalculatorServiceImpl implements CalculatorService {
      */
     private List<PaymentScheduleElementDto> calculatePaymentSchedule(BigDecimal amount, BigDecimal rate, int term) {
         List<PaymentScheduleElementDto> schedule = new ArrayList<>();
-        BigDecimal monthlyRate = rate.divide(new BigDecimal("1200"), 10, RoundingMode.HALF_UP);
+        BigDecimal monthlyRate = rate.divide(new BigDecimal(monthlyRateDivisor), 10, RoundingMode.HALF_UP);
         BigDecimal remainingDebt = amount;
         LocalDate paymentDate = LocalDate.now().plusMonths(1);
 
