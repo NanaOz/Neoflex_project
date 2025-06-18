@@ -12,6 +12,6 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Calculator")
-                        .description("API для сикросервисф calculator"));
+                        .description("API для микросервиса calculator"));
     }
 }

@@ -5,6 +5,7 @@ import com.javacode.calculator.dto.enums.EmploymentStatus;
 import com.javacode.calculator.dto.enums.Gender;
 import com.javacode.calculator.dto.enums.MaritalStatus;
 import com.javacode.calculator.dto.enums.Position;
+import com.javacode.calculator.handler.EmploymentValidationException;
 import com.javacode.calculator.handler.ScoringDataException;
 import com.javacode.calculator.service.CalculatorService;
 import org.springframework.beans.factory.annotation.Value;
@@ -77,7 +78,7 @@ public class CalculatorServiceImpl implements CalculatorService {
     @Override
     public CreditDto calculateCredit(ScoringDataDto scoringDataDto) {
         if (scoringDataDto.getEmployment().getEmploymentStatus() == EmploymentStatus.UNEMPLOYED) {
-            throw new ScoringDataException("Безработные клиенты не могут получить кредит");
+            throw new EmploymentValidationException("Безработные клиенты не могут получить кредит");
         }
 
         BigDecimal rate = calculateFinalRate(scoringDataDto);

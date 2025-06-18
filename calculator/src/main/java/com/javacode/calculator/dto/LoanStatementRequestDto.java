@@ -38,7 +38,7 @@ public class LoanStatementRequestDto {
 
     @Size(min = 2, max = 30,
             message = "Отчество должно быть от {min} до {max} символов")
-    @Pattern(regexp = "[a-zA-Z]+", message = "Отчество должно содержать только латинские буквы")
+    @Pattern(regexp = "^$|^[a-zA-Z]+$", message = "Отчество должно содержать только латинские буквы")
     private String middleName;
 
     @NotBlank(message = "Email не может быть пустым")

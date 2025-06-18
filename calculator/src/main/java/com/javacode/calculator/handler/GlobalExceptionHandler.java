@@ -1,42 +1,41 @@
 package com.javacode.calculator.handler;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import com.javacode.calculator.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(ScoringDataException.class)
-    public ResponseEntity<ErrorResponse> handleScoringDataException(ScoringDataException e) {
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                .body(new ErrorResponse("SCORING_DATA_ERROR", e.getMessage()));
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    public ErrorResponse handleScoringDataException(ScoringDataException e) {
+        return new ErrorResponse("SCORING_DATA_ERROR", e.getMessage());
     }
 
     @ExceptionHandler(CreditCalculationException.class)
-    public ResponseEntity<ErrorResponse> handleCreditCalculationException(CreditCalculationException e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("CALCULATION_ERROR", "Error during credit calculation"));
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleCreditCalculationException(CreditCalculationException e) {
+        return new ErrorResponse("CALCULATION_ERROR", e.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse("INVALID_INPUT", "Invalid input parameters"));
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleIllegalArgumentException(IllegalArgumentException e) {
+        return new ErrorResponse("INVALID_INPUT", e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("INTERNAL_ERROR", "Internal server error"));
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleException(Exception e) {
+        return new ErrorResponse("INTERNAL_ERROR", e.getMessage());
     }
 
-    @Getter
-    @AllArgsConstructor
-    private static class ErrorResponse {
-        private String code;
-        private String message;
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleValidationExceptions(MethodArgumentNotValidException e) {
+        return new ErrorResponse("VALIDATION_ERROR", e.getMessage());
     }
 }

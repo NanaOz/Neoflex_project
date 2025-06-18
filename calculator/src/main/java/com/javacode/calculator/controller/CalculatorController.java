@@ -7,6 +7,8 @@ import com.javacode.calculator.dto.ScoringDataDto;
 import com.javacode.calculator.service.CalculatorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Validated
 @RestController
 @RequestMapping("/calculator")
 @Tag(name = "Calculator API", description = "Микросервис для расчета кредитных предложений и условий")
@@ -29,7 +32,7 @@ public class CalculatorController {
             description = "Возвращает список возможных кредитных предложений на основе заявки"
     )
     @PostMapping("/offers")
-    public List<LoanOfferDto> calculateOffers(@RequestBody LoanStatementRequestDto request) {
+    public List<LoanOfferDto> calculateOffers(@RequestBody @Valid LoanStatementRequestDto request) {
         return calculatorService.calculateOffers(request);
     }
 
@@ -38,7 +41,7 @@ public class CalculatorController {
             description = "Возвращает детализированные условия кредита после скоринга"
     )
     @PostMapping("/calc")
-    public CreditDto calculateCredit(@RequestBody ScoringDataDto scoringDataDto) {
+    public CreditDto calculateCredit(@RequestBody @Valid ScoringDataDto scoringDataDto) {
         return calculatorService.calculateCredit(scoringDataDto);
     }
 }
