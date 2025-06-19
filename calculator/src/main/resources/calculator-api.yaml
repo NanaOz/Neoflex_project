@@ -11,11 +11,15 @@ servers:
 tags:
   - name: Calculator
     description: Кредитные расчеты
+    x-spring-controller: CalculatorApi
+    x-spring-provider:
+      useRestController: true
 
 paths:
   /calculator/offers:
     post:
       tags: [Calculator]
+      x-swagger-router-controller: CalculatorApi
       summary: Рассчитать кредитные предложения
       description: Возвращает 4 варианта кредитных предложений (со страховкой/без, для зарплатных/обычных клиентов)
       operationId: calculateOffers
@@ -235,6 +239,7 @@ components:
           type: string
           format: date
           example: "2015-05-25"
+          x-format: "yyyy-MM-dd"
         passportIssueBranch:
           type: string
           example: "ОУФМС России по г. Москве"
@@ -337,6 +342,7 @@ components:
           type: string
           format: date
           example: "2023-07-01"
+          x-format: "yyyy-MM-dd"
         totalPayment:
           type: number
           format: double

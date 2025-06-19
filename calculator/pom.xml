@@ -14,7 +14,6 @@
     <name>calculator</name>
     <description>microservice_calculate</description>
 
-
     <properties>
         <openapi-generator.version>7.8.0</openapi-generator.version>
         <springdoc.version>2.8.9</springdoc.version>
@@ -30,6 +29,15 @@
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
         </dependency>
+
+<!--        чтобы видеть сгенерированные классы, если не будут подгружаться-->
+<!--        <dependency>-->
+<!--            <groupId>com.javacode</groupId>-->
+<!--            <artifactId>calculator</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--            <classifier>openapi</classifier>-->
+<!--            <scope>compile</scope>-->
+<!--        </dependency>-->
     </dependencies>
 
     <build>
@@ -57,11 +65,14 @@
                             <configOptions>
                                 <delegatePattern>true</delegatePattern>
                                 <interfaceOnly>true</interfaceOnly>
-                                <useSpringBoot3>true</useSpringBoot3> <!-- Важно для Spring Boot 3 -->
+                                <useSpringBoot3>true</useSpringBoot3>
                                 <java8>true</java8>
                                 <dateLibrary>java8</dateLibrary>
                                 <useBeanValidation>true</useBeanValidation>
                                 <openApiNullable>false</openApiNullable>
+                                <useBigDecimals>true</useBigDecimals>
+                                <bigDecimalAsString>false</bigDecimalAsString>
+                                <serializationLibrary>jackson</serializationLibrary>
                             </configOptions>
                         </configuration>
                     </execution>

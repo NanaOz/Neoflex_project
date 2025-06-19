@@ -12,30 +12,45 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ScoringDataException.class)
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     public ErrorResponse handleScoringDataException(ScoringDataException e) {
-        return new ErrorResponse("SCORING_DATA_ERROR", e.getMessage());
+        ErrorResponse response = new ErrorResponse();
+        response.setCode("SCORING_DATA_ERROR");
+        response.setMessage(e.getMessage());
+        return response;
     }
 
     @ExceptionHandler(CreditCalculationException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleCreditCalculationException(CreditCalculationException e) {
-        return new ErrorResponse("CALCULATION_ERROR", e.getMessage());
+        ErrorResponse response = new ErrorResponse();
+        response.setCode("CALCULATION_ERROR");
+        response.setMessage(e.getMessage());
+        return response;
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIllegalArgumentException(IllegalArgumentException e) {
-        return new ErrorResponse("INVALID_INPUT", e.getMessage());
+        ErrorResponse response = new ErrorResponse();
+        response.setCode("INVALID_INPUT");
+        response.setMessage(e.getMessage());
+        return response;
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleException(Exception e) {
-        return new ErrorResponse("INTERNAL_ERROR", e.getMessage());
+        ErrorResponse response = new ErrorResponse();
+        response.setCode("INTERNAL_ERROR");
+        response.setMessage(e.getMessage());
+        return response;
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidationExceptions(MethodArgumentNotValidException e) {
-        return new ErrorResponse("VALIDATION_ERROR", e.getMessage());
+        ErrorResponse response = new ErrorResponse();
+        response.setCode("VALIDATION_ERROR");
+        response.setMessage(e.getMessage());
+        return response;
     }
 }
