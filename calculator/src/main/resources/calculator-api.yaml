@@ -1,0 +1,370 @@
+openapi: 3.0.3
+info:
+  title: Credit Calculator API
+  description: API для расчета кредитных предложений и условий кредитования
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+tags:
+  - name: Calculator
+    description: Кредитные расчеты
+
+paths:
+  /calculator/offers:
+    post:
+      tags: [Calculator]
+      summary: Рассчитать кредитные предложения
+      description: Возвращает 4 варианта кредитных предложений (со страховкой/без, для зарплатных/обычных клиентов)
+      operationId: calculateOffers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanStatementRequest'
+      responses:
+        '200':
+          description: Успешный расчет предложений
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LoanOffer'
+        '400':
+          description: Невалидные входные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /calculator/calc:
+    post:
+      tags: [Calculator]
+      summary: Рассчитать условия кредита
+      description: Точный расчет кредита после скоринга клиента
+      operationId: calculateCredit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScoringData'
+      responses:
+        '200':
+          description: Успешный расчет кредита
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Credit'
+        '400':
+          description: Ошибка валидации данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Ошибка скоринга (непрошедшие проверку)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Ошибка расчета
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    # Request/Response Models
+    LoanStatementRequest:
+      type: object
+      required:
+        - amount
+        - term
+        - firstName
+        - lastName
+        - email
+        - birthdate
+        - passportSeries
+        - passportNumber
+      properties:
+        amount:
+          type: number
+          format: double
+          minimum: 20000
+          example: 100000
+          description: Сумма кредита (мин. 20000)
+        term:
+          type: integer
+          minimum: 6
+          example: 12
+          description: Срок кредита в месяцах (мин. 6)
+        firstName:
+          type: string
+          minLength: 2
+          maxLength: 30
+          pattern: '^[a-zA-Z]+$'
+          example: Ivan
+          description: Имя (латинские буквы)
+        lastName:
+          type: string
+          minLength: 2
+          maxLength: 30
+          pattern: '^[a-zA-Z]+$'
+          example: Ivanov
+          description: Фамилия (латинские буквы)
+        middleName:
+          type: string
+          minLength: 2
+          maxLength: 30
+          pattern: '^$|^[a-zA-Z]+$'
+          nullable: true
+          example: Ivanovich
+          description: Отчество (необязательное)
+        email:
+          type: string
+          format: email
+          example: user@example.com
+          description: Email
+        birthdate:
+          type: string
+          format: date
+          example: "1990-01-01"
+          description: Дата рождения (должна быть в прошлом)
+        passportSeries:
+          type: string
+          pattern: '^\d{4}$'
+          example: "1234"
+          description: Серия паспорта (4 цифры)
+        passportNumber:
+          type: string
+          pattern: '^\d{6}$'
+          example: "567890"
+          description: Номер паспорта (6 цифр)
+
+    LoanOffer:
+      type: object
+      properties:
+        statementId:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+          description: UUID заявки
+        requestedAmount:
+          type: number
+          format: double
+          example: 100000
+          description: Запрашиваемая сумма
+        totalAmount:
+          type: number
+          format: double
+          example: 105000
+          description: Итоговая сумма с учетом страховки
+        term:
+          type: integer
+          example: 12
+          description: Срок кредита
+        monthlyPayment:
+          type: number
+          format: double
+          example: 8884.94
+          description: Ежемесячный платеж
+        rate:
+          type: number
+          format: double
+          example: 12.5
+          description: Процентная ставка
+        isInsuranceEnabled:
+          type: boolean
+          example: true
+          description: Включена ли страховка
+        isSalaryClient:
+          type: boolean
+          example: false
+          description: Зарплатный клиент
+
+    ScoringData:
+      type: object
+      required:
+        - amount
+        - term
+        - firstName
+        - lastName
+        - gender
+        - birthdate
+        - passportSeries
+        - passportNumber
+        - passportIssueDate
+        - passportIssueBranch
+        - maritalStatus
+        - employment
+      properties:
+        amount:
+          $ref: '#/components/schemas/LoanStatementRequest/properties/amount'
+        term:
+          $ref: '#/components/schemas/LoanStatementRequest/properties/term'
+        firstName:
+          $ref: '#/components/schemas/LoanStatementRequest/properties/firstName'
+        lastName:
+          $ref: '#/components/schemas/LoanStatementRequest/properties/lastName'
+        middleName:
+          $ref: '#/components/schemas/LoanStatementRequest/properties/middleName'
+        gender:
+          type: string
+          enum: [MALE, FEMALE, NON_BINARY]
+          example: MALE
+        birthdate:
+          $ref: '#/components/schemas/LoanStatementRequest/properties/birthdate'
+        passportSeries:
+          $ref: '#/components/schemas/LoanStatementRequest/properties/passportSeries'
+        passportNumber:
+          $ref: '#/components/schemas/LoanStatementRequest/properties/passportNumber'
+        passportIssueDate:
+          type: string
+          format: date
+          example: "2015-05-25"
+        passportIssueBranch:
+          type: string
+          example: "ОУФМС России по г. Москве"
+        maritalStatus:
+          type: string
+          enum: [SINGLE, MARRIED, DIVORCED, WIDOWED]
+          example: MARRIED
+        dependentAmount:
+          type: integer
+          minimum: 0
+          example: 1
+        employment:
+          $ref: '#/components/schemas/Employment'
+        accountNumber:
+          type: string
+          example: "40817810570012345678"
+        isInsuranceEnabled:
+          type: boolean
+          example: true
+        isSalaryClient:
+          type: boolean
+          example: false
+
+    Employment:
+      type: object
+      required:
+        - employmentStatus
+        - employerINN
+        - salary
+        - position
+        - workExperienceTotal
+        - workExperienceCurrent
+      properties:
+        employmentStatus:
+          type: string
+          enum: [UNEMPLOYED, SELF_EMPLOYED, EMPLOYED, BUSINESS_OWNER]
+          example: EMPLOYED
+        employerINN:
+          type: string
+          pattern: '^\d{10}|\d{12}$'
+          example: "1234567890"
+        salary:
+          type: number
+          format: double
+          minimum: 0
+          example: 50000
+        position:
+          type: string
+          enum: [WORKER, MID_MANAGER, TOP_MANAGER, OWNER]
+          example: MID_MANAGER
+        workExperienceTotal:
+          type: integer
+          minimum: 12
+          example: 60
+        workExperienceCurrent:
+          type: integer
+          minimum: 3
+          example: 24
+
+    Credit:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+          example: 105000
+        term:
+          type: integer
+          example: 12
+        monthlyPayment:
+          type: number
+          format: double
+          example: 8884.94
+        rate:
+          type: number
+          format: double
+          example: 12.5
+        psk:
+          type: number
+          format: double
+          example: 106619.28
+        isInsuranceEnabled:
+          type: boolean
+          example: true
+        isSalaryClient:
+          type: boolean
+          example: false
+        paymentSchedule:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentScheduleElement'
+
+    PaymentScheduleElement:
+      type: object
+      properties:
+        number:
+          type: integer
+          example: 1
+        date:
+          type: string
+          format: date
+          example: "2023-07-01"
+        totalPayment:
+          type: number
+          format: double
+          example: 8884.94
+        interestPayment:
+          type: number
+          format: double
+          example: 875.00
+        debtPayment:
+          type: number
+          format: double
+          example: 8009.94
+        remainingDebt:
+          type: number
+          format: double
+          example: 96990.06
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          example: "Ошибка валидации входных данных"
+        details:
+          type: array
+          items:
+            type: string
+          example: ["firstName: Должно содержать только латинские буквы"]
