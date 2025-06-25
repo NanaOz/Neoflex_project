@@ -1,7 +1,6 @@
 package com.javacode.calculator.service.impl;
 
 
-import com.javacode.calculator.controller.CalculatorApi;
 import com.javacode.calculator.dto.Credit;
 import com.javacode.calculator.dto.Employment;
 import com.javacode.calculator.dto.LoanOffer;

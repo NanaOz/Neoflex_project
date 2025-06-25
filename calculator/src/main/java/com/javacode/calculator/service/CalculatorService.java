@@ -14,5 +14,6 @@ import java.util.List;
 @Validated
 public interface CalculatorService {
     ResponseEntity<List<LoanOffer>> calculateOffers(LoanStatementRequest requestDto);
+
     ResponseEntity<Credit> calculateCredit(ScoringData scoringDataDto);
 }
