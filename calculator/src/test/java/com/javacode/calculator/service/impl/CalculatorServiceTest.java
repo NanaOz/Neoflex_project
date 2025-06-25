@@ -1,19 +1,15 @@
 package com.javacode.calculator.service.impl;
 
-import com.javacode.calculator.dto.EmploymentDto;
-import com.javacode.calculator.dto.LoanOfferDto;
-import com.javacode.calculator.dto.LoanStatementRequestDto;
-import com.javacode.calculator.dto.ScoringDataDto;
-import com.javacode.calculator.dto.enums.EmploymentStatus;
-import com.javacode.calculator.dto.enums.Gender;
-import com.javacode.calculator.dto.enums.MaritalStatus;
-import com.javacode.calculator.dto.enums.Position;
+import com.javacode.calculator.dto.Employment;
+import com.javacode.calculator.dto.LoanOffer;
+import com.javacode.calculator.dto.LoanStatementRequest;
+import com.javacode.calculator.dto.ScoringData;
 import com.javacode.calculator.handler.ScoringDataException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.ResponseEntity;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -23,6 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -62,9 +59,9 @@ class CalculatorServiceTest {
         field.set(obj, value);
     }
 
-    private LoanStatementRequestDto createValidLoanRequest() {
-        LoanStatementRequestDto request = new LoanStatementRequestDto();
-        request.setAmount(new BigDecimal("100000"));
+    private LoanStatementRequest createValidLoanRequest() {
+        LoanStatementRequest request = new LoanStatementRequest();
+        request.setAmount(100000.0);
         request.setTerm(12);
         request.setBirthdate(LocalDate.of(1990, 1, 1));
         request.setEmail("test@example.com");
@@ -76,9 +73,9 @@ class CalculatorServiceTest {
         return request;
     }
 
-    private ScoringDataDto createValidScoringData() {
-        ScoringDataDto scoringData = new ScoringDataDto();
-        scoringData.setAmount(new BigDecimal("100000"));
+    private ScoringData createValidScoringData() {
+        ScoringData scoringData = new ScoringData();
+        scoringData.setAmount(100000.0);
         scoringData.setTerm(12);
         scoringData.setBirthdate(LocalDate.of(1990, 1, 1));
         scoringData.setPassportSeries("1234");
@@ -86,17 +83,17 @@ class CalculatorServiceTest {
         scoringData.setFirstName("John");
         scoringData.setLastName("Doe");
         scoringData.setMiddleName("Middle");
-        scoringData.setGender(Gender.MALE);
-        scoringData.setMaritalStatus(MaritalStatus.SINGLE);
+        scoringData.setGender(ScoringData.GenderEnum.MALE);
+        scoringData.setMaritalStatus(ScoringData.MaritalStatusEnum.SINGLE);
         scoringData.setDependentAmount(0);
         scoringData.setIsInsuranceEnabled(false);
         scoringData.setIsSalaryClient(false);
 
-        EmploymentDto employment = new EmploymentDto();
-        employment.setEmploymentStatus(EmploymentStatus.EMPLOYED);
+        Employment employment = new Employment();
+        employment.setEmploymentStatus(Employment.EmploymentStatusEnum.EMPLOYED);
         employment.setEmployerINN("1234567890");
-        employment.setSalary(new BigDecimal("50000"));
-        employment.setPosition(Position.MID_MANAGER);
+        employment.setSalary(50000.0);
+        employment.setPosition(Employment.PositionEnum.MID_MANAGER);
         employment.setWorkExperienceTotal(60);
         employment.setWorkExperienceCurrent(24);
 
@@ -106,15 +103,16 @@ class CalculatorServiceTest {
 
     @Test
     void calculateOffers_shouldGenerateFourOffers() {
-        LoanStatementRequestDto request = createValidLoanRequest();
-        List<LoanOfferDto> offers = calculatorService.calculateOffers(request);
-        assertEquals(4, offers.size());
+        LoanStatementRequest request = createValidLoanRequest();
+        ResponseEntity<List<LoanOffer>> response = calculatorService.calculateOffers(request);
+        assertNotNull(response.getBody());
+        assertEquals(4, response.getBody().size());
     }
 
     @Test
     void calculateFinalRate_ForUnemployedClient_ThrowsException() throws Exception {
-        ScoringDataDto scoringData = createValidScoringData();
-        scoringData.getEmployment().setEmploymentStatus(EmploymentStatus.UNEMPLOYED);
+        ScoringData scoringData = createValidScoringData();
+        scoringData.getEmployment().setEmploymentStatus(Employment.EmploymentStatusEnum.UNEMPLOYED);
 
         assertThrows(ScoringDataException.class, () -> {
             calculatorService.calculateCredit(scoringData);
@@ -123,13 +121,13 @@ class CalculatorServiceTest {
 
     @Test
     public void calculateFinalRate_WithSelfEmployedClient_CorrectRate() throws Exception {
-        ScoringDataDto scoringData = new ScoringDataDto();
-        EmploymentDto employment = new EmploymentDto();
-        employment.setEmploymentStatus(EmploymentStatus.SELF_EMPLOYED);
+        ScoringData scoringData = new ScoringData();
+        Employment employment = new Employment();
+        employment.setEmploymentStatus(Employment.EmploymentStatusEnum.SELF_EMPLOYED);
         scoringData.setEmployment(employment);
         scoringData.setBirthdate(LocalDate.of(1990, 1, 1));
 
-        Method method = CalculatorServiceImpl.class.getDeclaredMethod("calculateFinalRate", ScoringDataDto.class);
+        Method method = CalculatorServiceImpl.class.getDeclaredMethod("calculateFinalRate", ScoringData.class);
         method.setAccessible(true);
 
         BigDecimal finalRate = (BigDecimal) method.invoke(calculatorService, scoringData);
@@ -139,20 +137,20 @@ class CalculatorServiceTest {
 
     @Test
     void createOffer_WithInsuranceAndSalaryClient_ReturnsCorrectOffer() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        LoanStatementRequestDto request = createValidLoanRequest();
+        LoanStatementRequest request = createValidLoanRequest();
 
         Method method = CalculatorServiceImpl.class.getDeclaredMethod(
                 "createOffer",
-                LoanStatementRequestDto.class,
+                LoanStatementRequest.class,
                 boolean.class,
                 boolean.class
         );
         method.setAccessible(true);
 
-        LoanOfferDto offer = (LoanOfferDto) method.invoke(calculatorService, request, true, true);
+        LoanOffer offer = (LoanOffer) method.invoke(calculatorService, request, true, true);
 
-        assertEquals(new BigDecimal("101000"), offer.getTotalAmount());
-        assertEquals(new BigDecimal("8.5"), offer.getRate());
+        assertEquals(101000.0, offer.getTotalAmount(), 0.001);
+        assertEquals(8.5, offer.getRate(), 0.001);
     }
 
     @Test

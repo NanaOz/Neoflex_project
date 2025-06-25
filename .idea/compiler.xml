@@ -16,6 +16,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="Neoflex_project" options="-parameters" />
       <module name="calculator" options="-parameters" />
       <module name="calculator (1)" options="-parameters" />
     </option>

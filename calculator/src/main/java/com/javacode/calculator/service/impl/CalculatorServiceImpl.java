@@ -1,14 +1,17 @@
 package com.javacode.calculator.service.impl;
 
-import com.javacode.calculator.dto.*;
-import com.javacode.calculator.dto.enums.EmploymentStatus;
-import com.javacode.calculator.dto.enums.Gender;
-import com.javacode.calculator.dto.enums.MaritalStatus;
-import com.javacode.calculator.dto.enums.Position;
+
+import com.javacode.calculator.dto.Credit;
+import com.javacode.calculator.dto.Employment;
+import com.javacode.calculator.dto.LoanOffer;
+import com.javacode.calculator.dto.LoanStatementRequest;
+import com.javacode.calculator.dto.PaymentScheduleElement;
+import com.javacode.calculator.dto.ScoringData;
+import com.javacode.calculator.handler.CreditCalculationException;
 import com.javacode.calculator.handler.EmploymentValidationException;
-import com.javacode.calculator.handler.ScoringDataException;
 import com.javacode.calculator.service.CalculatorService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -64,8 +67,8 @@ public class CalculatorServiceImpl implements CalculatorService {
     private int monthlyRateDivisor;
 
     @Override
-    public List<LoanOfferDto> calculateOffers(LoanStatementRequestDto requestDto) {
-        List<LoanOfferDto> offers = new ArrayList<>();
+    public ResponseEntity<List<LoanOffer>> calculateOffers(LoanStatementRequest requestDto) {
+        List<LoanOffer> offers = new ArrayList<>();
 
         for (boolean insurance : new boolean[]{false, true}) {
             for (boolean salaryClient : new boolean[]{false, true}) {
@@ -73,38 +76,42 @@ public class CalculatorServiceImpl implements CalculatorService {
             }
         }
 
-        offers.sort(Comparator.comparing(LoanOfferDto::getRate).reversed());
-        return offers;
+        offers.sort(Comparator.comparing(LoanOffer::getRate).reversed());
+        return ResponseEntity.ok(offers);
     }
 
     @Override
-    public CreditDto calculateCredit(ScoringDataDto scoringDataDto) {
-        if (scoringDataDto.getEmployment().getEmploymentStatus() == EmploymentStatus.UNEMPLOYED) {
+    public ResponseEntity<Credit> calculateCredit(ScoringData scoringDataDto) {
+        if (scoringDataDto.getEmployment().getEmploymentStatus() == Employment.EmploymentStatusEnum.UNEMPLOYED) {
             throw new EmploymentValidationException("Безработные клиенты не могут получить кредит");
         }
 
-        BigDecimal rate = calculateFinalRate(scoringDataDto);
-        BigDecimal totalAmount = scoringDataDto.getAmount();
+        try {
+            BigDecimal rate = calculateFinalRate(scoringDataDto);
+            BigDecimal totalAmount = BigDecimal.valueOf(scoringDataDto.getAmount());
 
-        if (Boolean.TRUE.equals(scoringDataDto.getIsInsuranceEnabled())) {
-            totalAmount = totalAmount.add(insuranceCost);
+            if (Boolean.TRUE.equals(scoringDataDto.getIsInsuranceEnabled())) {
+                totalAmount = totalAmount.add(insuranceCost);
+            }
+
+            BigDecimal monthlyPayment = calculateMonthlyPayment(totalAmount, rate, scoringDataDto.getTerm());
+            BigDecimal psk = calculatePSK(totalAmount, monthlyPayment, scoringDataDto.getTerm());
+            List<PaymentScheduleElement> paymentSchedule = calculatePaymentSchedule(totalAmount, rate, scoringDataDto.getTerm());
+
+            Credit credit = new Credit();
+            credit.setAmount(totalAmount.doubleValue());
+            credit.setTerm(scoringDataDto.getTerm());
+            credit.setMonthlyPayment(monthlyPayment.doubleValue());
+            credit.setRate(rate.doubleValue());
+            credit.setPsk(psk.doubleValue());
+            credit.setIsInsuranceEnabled(scoringDataDto.getIsInsuranceEnabled());
+            credit.setIsSalaryClient(scoringDataDto.getIsSalaryClient());
+            credit.setPaymentSchedule(paymentSchedule);
+
+            return ResponseEntity.ok(credit);
+        } catch (CreditCalculationException e) {
+            throw new CreditCalculationException("Ошибка расчета кредита: " + e.getMessage());
         }
-
-        BigDecimal monthlyPayment = calculateMonthlyPayment(totalAmount, rate, scoringDataDto.getTerm());
-        BigDecimal psk = calculatePSK(totalAmount, monthlyPayment, scoringDataDto.getTerm());
-        List<PaymentScheduleElementDto> paymentSchedule = calculatePaymentSchedule(totalAmount, rate, scoringDataDto.getTerm());
-
-        CreditDto credit = new CreditDto();
-        credit.setAmount(totalAmount);
-        credit.setTerm(scoringDataDto.getTerm());
-        credit.setMonthlyPayment(monthlyPayment);
-        credit.setRate(rate);
-        credit.setPsk(psk);
-        credit.setIsInsuranceEnabled(scoringDataDto.getIsInsuranceEnabled());
-        credit.setIsSalaryClient(scoringDataDto.getIsSalaryClient());
-        credit.setPaymentSchedule(paymentSchedule);
-
-        return credit;
     }
 
     /**
@@ -115,9 +122,10 @@ public class CalculatorServiceImpl implements CalculatorService {
      * @param isSalaryClient     Флаг зарплатного клиента
      * @return Объект кредитного предложения с рассчитанными параметрами
      */
-    private LoanOfferDto createOffer(LoanStatementRequestDto requestDto, boolean isInsuranceEnabled, boolean isSalaryClient) {
+    private LoanOffer createOffer(LoanStatementRequest requestDto, boolean isInsuranceEnabled, boolean isSalaryClient) {
+        try {
         BigDecimal rate = baseRate;
-        BigDecimal totalAmount = requestDto.getAmount();
+        BigDecimal totalAmount = BigDecimal.valueOf(requestDto.getAmount());
 
         if (isInsuranceEnabled) {
             rate = rate.subtract(insuranceRateReduction);
@@ -130,17 +138,20 @@ public class CalculatorServiceImpl implements CalculatorService {
 
         BigDecimal monthlyPayment = calculateMonthlyPayment(totalAmount, rate, requestDto.getTerm());
 
-        LoanOfferDto offer = new LoanOfferDto();
+        LoanOffer offer = new LoanOffer();
         offer.setStatementId(UUID.randomUUID());
         offer.setRequestedAmount(requestDto.getAmount());
-        offer.setTotalAmount(totalAmount);
+        offer.setTotalAmount(totalAmount.doubleValue());
         offer.setTerm(requestDto.getTerm());
-        offer.setMonthlyPayment(monthlyPayment);
-        offer.setRate(rate);
+        offer.setMonthlyPayment(monthlyPayment.doubleValue());
+        offer.setRate(rate.doubleValue());
         offer.setIsInsuranceEnabled(isInsuranceEnabled);
         offer.setIsSalaryClient(isSalaryClient);
 
         return offer;
+        } catch (CreditCalculationException e) {
+            throw new CreditCalculationException("Ошибка создания предложения: " + e.getMessage());
+        }
     }
 
     /**
@@ -150,7 +161,7 @@ public class CalculatorServiceImpl implements CalculatorService {
      * @return Итоговая процентная ставка с учетом всех корректировок
      * @throws IllegalArgumentException если клиент безработный
      */
-    private BigDecimal calculateFinalRate(ScoringDataDto scoringData) {
+    private BigDecimal calculateFinalRate(ScoringData scoringData) {
         BigDecimal rate = baseRate;
 
         // Корректировка ставки на основе данных скоринга
@@ -165,24 +176,24 @@ public class CalculatorServiceImpl implements CalculatorService {
                 break;
         }
 
-        if (scoringData.getEmployment().getPosition() == Position.MID_MANAGER) {
+        if (scoringData.getEmployment().getPosition() == Employment.PositionEnum.MID_MANAGER) {
             rate = rate.subtract(midManagerRate);
-        } else if (scoringData.getEmployment().getPosition() == Position.TOP_MANAGER) {
+        } else if (scoringData.getEmployment().getPosition() == Employment.PositionEnum.TOP_MANAGER) {
             rate = rate.subtract(topManagerRate);
         }
 
-        if (scoringData.getMaritalStatus() == MaritalStatus.MARRIED) {
+        if (scoringData.getMaritalStatus() == ScoringData.MaritalStatusEnum.MARRIED) {
             rate = rate.subtract(marriedRate);
-        } else if (scoringData.getMaritalStatus() == MaritalStatus.DIVORCED) {
+        } else if (scoringData.getMaritalStatus() == ScoringData.MaritalStatusEnum.DIVORCED) {
             rate = rate.add(divorcedRate);
         }
 
         int age = Period.between(scoringData.getBirthdate(), LocalDate.now()).getYears();
-        if (scoringData.getGender() == Gender.FEMALE && age >= femaleAgeMin && age <= femaleAgeMax) {
+        if (scoringData.getGender() == ScoringData.GenderEnum.FEMALE && age >= femaleAgeMin && age <= femaleAgeMax) {
             rate = rate.subtract(genderAgeRate);
-        } else if (scoringData.getGender() == Gender.MALE && age >= maleAgeMin && age <= maleAgeMax) {
+        } else if (scoringData.getGender() == ScoringData.GenderEnum.MALE && age >= maleAgeMin && age <= maleAgeMax) {
             rate = rate.subtract(genderAgeRate);
-        } else if (scoringData.getGender() == Gender.NON_BINARY) {
+        } else if (scoringData.getGender() == ScoringData.GenderEnum.NON_BINARY) {
             rate = rate.add(nonBinaryRate);
         }
 
@@ -233,8 +244,8 @@ public class CalculatorServiceImpl implements CalculatorService {
      * @param term   Срок кредита в месяцах
      * @return Список элементов графика платежей
      */
-    private List<PaymentScheduleElementDto> calculatePaymentSchedule(BigDecimal amount, BigDecimal rate, int term) {
-        List<PaymentScheduleElementDto> schedule = new ArrayList<>();
+    private List<PaymentScheduleElement> calculatePaymentSchedule(BigDecimal amount, BigDecimal rate, int term) {
+        List<PaymentScheduleElement> schedule = new ArrayList<>();
         BigDecimal monthlyRate = rate.divide(new BigDecimal(monthlyRateDivisor), 10, RoundingMode.HALF_UP);
         BigDecimal remainingDebt = amount;
         LocalDate paymentDate = LocalDate.now().plusMonths(1);
@@ -249,13 +260,13 @@ public class CalculatorServiceImpl implements CalculatorService {
                 remainingDebt = BigDecimal.ZERO;
             }
 
-            PaymentScheduleElementDto element = new PaymentScheduleElementDto();
+            PaymentScheduleElement element = new PaymentScheduleElement();
             element.setNumber(i);
             element.setDate(paymentDate);
-            element.setTotalPayment(monthlyPayment);
-            element.setInterestPayment(interestPayment);
-            element.setDebtPayment(debtPayment);
-            element.setRemainingDebt(remainingDebt);
+            element.setTotalPayment(monthlyPayment.doubleValue());
+            element.setInterestPayment(interestPayment.doubleValue());
+            element.setDebtPayment(debtPayment.doubleValue());
+            element.setRemainingDebt(remainingDebt.doubleValue());
 
             schedule.add(element);
             paymentDate = paymentDate.plusMonths(1);

@@ -1,47 +1,30 @@
 package com.javacode.calculator.controller;
 
-import com.javacode.calculator.dto.CreditDto;
-import com.javacode.calculator.dto.LoanOfferDto;
-import com.javacode.calculator.dto.LoanStatementRequestDto;
-import com.javacode.calculator.dto.ScoringDataDto;
+import com.javacode.calculator.dto.Credit;
+import com.javacode.calculator.dto.LoanOffer;
+import com.javacode.calculator.dto.LoanStatementRequest;
+import com.javacode.calculator.dto.ScoringData;
 import com.javacode.calculator.service.CalculatorService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Validated
 @RestController
-@RequestMapping("/calculator")
-@Tag(name = "Calculator API", description = "Микросервис для расчета кредитных предложений и условий")
-public class CalculatorController {
+public class CalculatorController implements CalculatorApi {
     private final CalculatorService calculatorService;
 
     public CalculatorController(CalculatorService calculatorService) {
         this.calculatorService = calculatorService;
     }
 
-    @Operation(
-            summary = "Рассчитать кредитные предложения",
-            description = "Возвращает список возможных кредитных предложений на основе заявки"
-    )
-    @PostMapping("/offers")
-    public List<LoanOfferDto> calculateOffers(@RequestBody @Valid LoanStatementRequestDto request) {
-        return calculatorService.calculateOffers(request);
+    @Override
+    public ResponseEntity<List<LoanOffer>> calculateOffers(LoanStatementRequest requestDto) {
+        return calculatorService.calculateOffers(requestDto);
     }
 
-    @Operation(
-            summary = "Рассчитать условия кредита",
-            description = "Возвращает детализированные условия кредита после скоринга"
-    )
-    @PostMapping("/calc")
-    public CreditDto calculateCredit(@RequestBody @Valid ScoringDataDto scoringDataDto) {
+    @Override
+    public ResponseEntity<Credit> calculateCredit(ScoringData scoringDataDto) {
         return calculatorService.calculateCredit(scoringDataDto);
     }
 }
