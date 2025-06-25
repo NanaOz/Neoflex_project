@@ -7,6 +7,7 @@ import com.javacode.calculator.dto.LoanOffer;
 import com.javacode.calculator.dto.LoanStatementRequest;
 import com.javacode.calculator.dto.PaymentScheduleElement;
 import com.javacode.calculator.dto.ScoringData;
+import com.javacode.calculator.handler.CreditCalculationException;
 import com.javacode.calculator.handler.EmploymentValidationException;
 import com.javacode.calculator.service.CalculatorService;
 import org.springframework.beans.factory.annotation.Value;
@@ -85,28 +86,32 @@ public class CalculatorServiceImpl implements CalculatorService {
             throw new EmploymentValidationException("Безработные клиенты не могут получить кредит");
         }
 
-        BigDecimal rate = calculateFinalRate(scoringDataDto);
-        BigDecimal totalAmount = BigDecimal.valueOf(scoringDataDto.getAmount());
+        try {
+            BigDecimal rate = calculateFinalRate(scoringDataDto);
+            BigDecimal totalAmount = BigDecimal.valueOf(scoringDataDto.getAmount());
 
-        if (Boolean.TRUE.equals(scoringDataDto.getIsInsuranceEnabled())) {
-            totalAmount = totalAmount.add(insuranceCost);
+            if (Boolean.TRUE.equals(scoringDataDto.getIsInsuranceEnabled())) {
+                totalAmount = totalAmount.add(insuranceCost);
+            }
+
+            BigDecimal monthlyPayment = calculateMonthlyPayment(totalAmount, rate, scoringDataDto.getTerm());
+            BigDecimal psk = calculatePSK(totalAmount, monthlyPayment, scoringDataDto.getTerm());
+            List<PaymentScheduleElement> paymentSchedule = calculatePaymentSchedule(totalAmount, rate, scoringDataDto.getTerm());
+
+            Credit credit = new Credit();
+            credit.setAmount(totalAmount.doubleValue());
+            credit.setTerm(scoringDataDto.getTerm());
+            credit.setMonthlyPayment(monthlyPayment.doubleValue());
+            credit.setRate(rate.doubleValue());
+            credit.setPsk(psk.doubleValue());
+            credit.setIsInsuranceEnabled(scoringDataDto.getIsInsuranceEnabled());
+            credit.setIsSalaryClient(scoringDataDto.getIsSalaryClient());
+            credit.setPaymentSchedule(paymentSchedule);
+
+            return ResponseEntity.ok(credit);
+        } catch (CreditCalculationException e) {
+            throw new CreditCalculationException("Ошибка расчета кредита: " + e.getMessage());
         }
-
-        BigDecimal monthlyPayment = calculateMonthlyPayment(totalAmount, rate, scoringDataDto.getTerm());
-        BigDecimal psk = calculatePSK(totalAmount, monthlyPayment, scoringDataDto.getTerm());
-        List<PaymentScheduleElement> paymentSchedule = calculatePaymentSchedule(totalAmount, rate, scoringDataDto.getTerm());
-
-        Credit credit = new Credit();
-        credit.setAmount(totalAmount.doubleValue());
-        credit.setTerm(scoringDataDto.getTerm());
-        credit.setMonthlyPayment(monthlyPayment.doubleValue());
-        credit.setRate(rate.doubleValue());
-        credit.setPsk(psk.doubleValue());
-        credit.setIsInsuranceEnabled(scoringDataDto.getIsInsuranceEnabled());
-        credit.setIsSalaryClient(scoringDataDto.getIsSalaryClient());
-        credit.setPaymentSchedule(paymentSchedule);
-
-        return ResponseEntity.ok(credit);
     }
 
     /**
@@ -118,6 +123,7 @@ public class CalculatorServiceImpl implements CalculatorService {
      * @return Объект кредитного предложения с рассчитанными параметрами
      */
     private LoanOffer createOffer(LoanStatementRequest requestDto, boolean isInsuranceEnabled, boolean isSalaryClient) {
+        try {
         BigDecimal rate = baseRate;
         BigDecimal totalAmount = BigDecimal.valueOf(requestDto.getAmount());
 
@@ -143,6 +149,9 @@ public class CalculatorServiceImpl implements CalculatorService {
         offer.setIsSalaryClient(isSalaryClient);
 
         return offer;
+        } catch (CreditCalculationException e) {
+            throw new CreditCalculationException("Ошибка создания предложения: " + e.getMessage());
+        }
     }
 
     /**
