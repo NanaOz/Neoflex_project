@@ -1,11 +1,11 @@
-package com.javacode.microservice_calculate;
+package com.javacode.calculator;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class MicroserviceCalculateApplication {
+public class CalculatorApplication {
     public static void main(String[] args) {
-        SpringApplication.run(MicroserviceCalculateApplication.class, args);
+        SpringApplication.run(CalculatorApplication.class, args);
     }
 }
