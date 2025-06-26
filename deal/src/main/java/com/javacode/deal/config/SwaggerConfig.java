@@ -1,4 +1,4 @@
-package com.javacode.deal;
+package com.javacode.deal.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;

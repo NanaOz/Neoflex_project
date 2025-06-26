@@ -1,4 +1,4 @@
-package com.javacode.deal.config;
+package com.javacode.deal;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
