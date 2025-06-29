@@ -3,18 +3,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.javacode</groupId>
-    <artifactId>deal</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>deal</name>
-    <description>deal</description>
-
     <parent>
         <groupId>com.javacode</groupId>
         <artifactId>Neoflex_project</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
+
+    <artifactId>deal</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>deal</name>
+    <description>deal</description>
 
     <properties>
         <openapi-generator.version>7.8.0</openapi-generator.version>
@@ -23,14 +22,37 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <version>3.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>1.6.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-processor</artifactId>
+            <version>1.6.3</version>
+        </dependency>
+        <dependency>
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.openapitools</groupId>
             <artifactId>jackson-databind-nullable</artifactId>
             <version>0.2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
         </dependency>
     </dependencies>
 
@@ -51,10 +73,10 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/calculator-api.yaml</inputSpec>
+                            <inputSpec>${project.basedir}/src/main/resources/deal-api.yaml</inputSpec>
                             <generatorName>spring</generatorName>
-                            <apiPackage>com.javacode.calculator.controller</apiPackage>
-                            <modelPackage>com.javacode.calculator.dto</modelPackage>
+                            <apiPackage>com.javacode.deal.controller</apiPackage>
+                            <modelPackage>com.javacode.deal.dto</modelPackage>
                             <supportingFilesToGenerate>ApiUtil.java</supportingFilesToGenerate>
                             <configOptions>
                                 <delegatePattern>true</delegatePattern>
