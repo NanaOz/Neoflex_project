@@ -1,6 +1,5 @@
 package com.javacode.deal.model.entity;
 
-import com.javacode.deal.dto.PaymentScheduleElementDto;
 import com.javacode.deal.model.enums.CreditStatus;
 import com.javacode.deal.model.jsonb.PaymentScheduleElement;
 import com.javacode.deal.model.jsonb.converter.JsonbConverter;
@@ -13,17 +12,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import org.hibernate.annotations.Type;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.GenericGenerator;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;

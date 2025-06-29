@@ -1,6 +1,5 @@
 package com.javacode.deal.model.entity;
 
-import com.javacode.deal.dto.LoanOfferDto;
 import com.javacode.deal.model.enums.ApplicationStatus;
 import com.javacode.deal.model.jsonb.LoanOffer;
 import com.javacode.deal.model.jsonb.StatusHistory;
@@ -9,15 +8,11 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;

@@ -3,21 +3,15 @@ package com.javacode.deal.model.jsonb;
 import com.javacode.deal.model.enums.EmploymentPosition;
 import com.javacode.deal.model.enums.EmploymentStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 @Data
 @Builder
 @Schema(description = "Employment")
 public class Employment {
-
     private EmploymentStatus status;
     private String employerInn;
     private BigDecimal salary;

@@ -11,7 +11,6 @@ import java.util.UUID;
 @Builder
 @Schema(description = "Loan offer")
 public class LoanOffer {
-
     private UUID statementId;
     private BigDecimal requestedAmount;
     private BigDecimal totalAmount;
