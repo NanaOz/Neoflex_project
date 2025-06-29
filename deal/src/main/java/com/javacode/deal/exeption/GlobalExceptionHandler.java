@@ -30,4 +30,10 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleAllExceptions(Exception ex) {
         return new ErrorResponse("Внутренняя ошибка сервера", "непредвиденная ошибка");
     }
+
+    @ExceptionHandler(CreditProcessingException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleCreditProcessingException(CreditProcessingException ex) {
+        return new ErrorResponse("Ошибка при обработке кредита", ex.getMessage());
+    }
 }
