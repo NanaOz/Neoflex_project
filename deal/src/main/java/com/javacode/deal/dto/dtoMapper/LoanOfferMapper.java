@@ -8,7 +8,7 @@ import org.mapstruct.MappingConstants;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface LoanOfferMapper {
-    LoanOfferDto toDto(LoanOffer entity);
-
     LoanOffer toEntity(LoanOfferDto dto);
+
+    LoanOfferDto toDto(LoanOffer entity);
 }

@@ -7,29 +7,49 @@ import com.javacode.deal.model.jsonb.PaymentScheduleElement;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
+import org.mapstruct.Named;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface CreditMapper {
     @Mapping(target = "creditId", ignore = true)
     @Mapping(target = "creditStatus", ignore = true)
+    @Mapping(target = "insuranceEnabled", expression = "java(dto.getIsInsuranceEnabled())")
+    @Mapping(target = "salaryClient", expression = "java(dto.getIsSalaryClient())")
+    @Mapping(target = "paymentSchedule", source = "paymentSchedule", qualifiedByName = "mapPaymentSchedule")
     Credit toEntity(CreditDto dto);
 
-    @Mapping(target = "paymentSchedule", source = "paymentSchedule")
+    @Mapping(target = "isInsuranceEnabled", expression = "java(entity.getInsuranceEnabled())")
+    @Mapping(target = "isSalaryClient", expression = "java(entity.getSalaryClient())")
+    @Mapping(target = "paymentSchedule", source = "paymentSchedule", qualifiedByName = "mapPaymentScheduleDto")
     CreditDto toDto(Credit entity);
 
+    @Named("mapPaymentSchedule")
     default List<PaymentScheduleElement> mapPaymentSchedule(List<PaymentScheduleElementDto> dtos) {
-        return dtos.stream()
-                .map(dto -> PaymentScheduleElement.builder()
-                        .number(dto.getNumber())
-                        .date(dto.getDate())
-                        .totalPayment(dto.getTotalPayment())
-                        .interestPayment(dto.getInterestPayment())
-                        .debtPayment(dto.getDebtPayment())
-                        .remainingDebt(dto.getRemainingDebt())
-                        .build())
-                .collect(Collectors.toList());
+        if (dtos == null) return null;
+        return dtos.stream().map(this::toPaymentElement).toList();
     }
+
+    @Named("mapPaymentScheduleDto")
+    default List<PaymentScheduleElementDto> mapPaymentScheduleDto(List<PaymentScheduleElement> elements) {
+        if (elements == null) return null;
+        return elements.stream().map(this::toPaymentElementDto).toList();
+    }
+
+    @Mapping(target = "number", source = "number")
+    @Mapping(target = "date", source = "date")
+    @Mapping(target = "totalPayment", source = "totalPayment")
+    @Mapping(target = "interestPayment", source = "interestPayment")
+    @Mapping(target = "debtPayment", source = "debtPayment")
+    @Mapping(target = "remainingDebt", source = "remainingDebt")
+    PaymentScheduleElement toPaymentElement(PaymentScheduleElementDto dto);
+
+    @Mapping(target = "number", source = "number")
+    @Mapping(target = "date", source = "date")
+    @Mapping(target = "totalPayment", source = "totalPayment")
+    @Mapping(target = "interestPayment", source = "interestPayment")
+    @Mapping(target = "debtPayment", source = "debtPayment")
+    @Mapping(target = "remainingDebt", source = "remainingDebt")
+    PaymentScheduleElementDto toPaymentElementDto(PaymentScheduleElement entity);
 }
