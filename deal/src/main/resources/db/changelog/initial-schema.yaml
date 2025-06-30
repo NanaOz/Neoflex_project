@@ -1,0 +1,251 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: alina
+      changes:
+        - sql:
+            sql: CREATE SCHEMA IF NOT EXISTS deal_schema;
+            splitStatements: false
+            stripComments: false
+
+        - createTable:
+            schemaName: deal_schema
+            tableName: passport
+            columns:
+              - column:
+                  name: passport_uuid
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: series
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: number
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: issue_branch
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: issue_date
+                  type: date
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            schemaName: deal_schema
+            tableName: employment
+            columns:
+              - column:
+                  name: employment_uuid
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: employer_inn
+                  type: varchar(12)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: salary
+                  type: numeric(19,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: position
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: work_experience_total
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: work_experience_current
+                  type: integer
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            schemaName: deal_schema
+            tableName: client
+            columns:
+              - column:
+                  name: client_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: last_name
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: first_name
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: middle_name
+                  type: varchar(50)
+              - column:
+                  name: birth_date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: gender
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: marital_status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: dependent_amount
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: passport_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_client_passport
+                    references: deal_schema.passport(passport_uuid)
+              - column:
+                  name: employment_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_client_employment
+                    references: deal_schema.employment(employment_uuid)
+              - column:
+                  name: account_number
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            schemaName: deal_schema
+            tableName: credit
+            columns:
+              - column:
+                  name: credit_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: amount
+                  type: numeric(19,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: term
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: monthly_payment
+                  type: numeric(19,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rate
+                  type: numeric(5,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: psk
+                  type: numeric(19,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payment_schedule
+                  type: jsonb
+                  constraints:
+                    nullable: false
+              - column:
+                  name: insurance_enabled
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: salary_client
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: credit_status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            schemaName: deal_schema
+            tableName: statement
+            columns:
+              - column:
+                  name: statement_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: client_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_statement_client
+                    references: deal_schema.client(client_id)
+              - column:
+                  name: credit_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_statement_credit
+                    references: deal_schema.credit(credit_id)
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: creation_date
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: applied_offer
+                  type: jsonb
+              - column:
+                  name: sign_date
+                  type: timestamp
+              - column:
+                  name: ses_code
+                  type: varchar(6)
+              - column:
+                  name: status_history
+                  type: jsonb
