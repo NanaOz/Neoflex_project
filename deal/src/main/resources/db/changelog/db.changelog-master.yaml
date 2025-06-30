@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+        id: 0
+        author: alina
+        changes:
+          - sql:
+              sql: CREATE SCHEMA IF NOT EXISTS deal_schema;
+              splitStatements: false
+              stripComments: false
+  - include:
+      file: initial-schema.yaml
+      relativeToChangelogFile: true
+  - include:
+     file: reference-data.sql
+     relativeToChangelogFile: true
